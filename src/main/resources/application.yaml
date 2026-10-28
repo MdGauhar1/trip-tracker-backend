@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: TripTrackerApplication
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/trip_tracker
+    username: root
+    password: ${DB_PASSWORD:test}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  security:
+    user:
+      name: root
+      password: ${APP_PASSWORD:test}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 86400000
+
+server:
+  port: 8801
