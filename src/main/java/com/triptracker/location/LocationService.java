@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,16 +30,19 @@ public class LocationService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public LocationService(
             LocationRepository locationRepository,
             GroupRepository groupRepository,
             GroupMemberRepository groupMemberRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            SimpMessagingTemplate messagingTemplate) {
         this.locationRepository = locationRepository;
         this.groupRepository = groupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     private User getAuthenticatedUser() {
@@ -151,7 +155,17 @@ public class LocationService {
 
         Location saved = locationRepository.save(location);
 
-        return toResponse(saved);
+        LocationResponse response = toResponse(saved);
+
+        // Notify connected subscribers after saving the location.
+        messagingTemplate.convertAndSend(
+                "/topic/groups/" + groupId + "/locations",
+                response
+        );
+
+        return response;
+        //Location saved = locationRepository.save(location);
+        // return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
